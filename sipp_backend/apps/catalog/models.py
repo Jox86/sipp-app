@@ -2,27 +2,70 @@ from django.db import models
 from django.conf import settings
 
 
-class Catalog(models.Model):
-    DATA_TYPE_CHOICES = [
-        ('products', 'Productos'),
-        ('services', 'Servicios'),
-        ('both', 'Ambos'),
-    ]
-
-    supplier = models.CharField(max_length=255)
-    company = models.CharField(max_length=255)
-    businessType = models.CharField(max_length=100)
+class Empresa(models.Model):
+    nombre = models.CharField(max_length=255)
+    encargado = models.CharField(max_length=255, blank=True, null=True)
     website = models.URLField(blank=True, null=True)
-    dataType = models.CharField(max_length=20, choices=DATA_TYPE_CHOICES, default='both')
-    data = models.JSONField(default=list)
-    contractActive = models.BooleanField(default=False)
+    activo = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Catálogo'
-        verbose_name_plural = 'Catálogos'
-        ordering = ['-created_at']
+        verbose_name = 'Empresa'
+        verbose_name_plural = 'Empresas'
+        ordering = ['nombre']
 
     def __str__(self):
-        return f'{self.company} - {self.supplier}'
+        return self.nombre
+
+
+class Producto(models.Model):
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos')
+    nombre = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=100, blank=True, null=True)
+    precio = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    caracteristicas = models.JSONField(default=list, blank=True)
+    categoria = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Producto'
+        verbose_name_plural = 'Productos'
+
+    def __str__(self):
+        return f'{self.nombre} - {self.empresa.nombre}'
+
+
+class Servicio(models.Model):
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='servicios')
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+    precio = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Servicio'
+        verbose_name_plural = 'Servicios'
+
+    def __str__(self):
+        return f'{self.nombre} - {self.empresa.nombre}'
+
+
+class PedidoExtra(models.Model):
+    STATUS_CHOICES = [
+        ('Pendiente', 'Pendiente'),
+        ('Aprobado', 'Aprobado'),
+        ('Denegado', 'Denegado'),
+    ]
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    proyecto = models.ForeignKey('projects.Project', on_delete=models.SET_NULL, null=True)
+    tipo = models.CharField(max_length=20, choices=[('producto', 'Producto'), ('servicio', 'Servicio')])
+    descripcion = models.TextField()
+    estado = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendiente')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Pedido Extra'
+        verbose_name_plural = 'Pedidos Extra'
+
+    def __str__(self):
+        return f'Pedido Extra #{self.id} - {self.usuario.fullName}'

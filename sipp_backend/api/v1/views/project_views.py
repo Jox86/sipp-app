@@ -11,17 +11,28 @@ from api.v1.serializers.project_serializers import (
 
 class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
-    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'areaType', 'area']
+    search_fields = ['costCenter', 'projectNumber', 'name', 'owner__fullName']
+    ordering_fields = ['costCenter', 'budget', 'created_at']
+    ordering = ['-created_at']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ProjectListSerializer
+        elif self.action in ['retrieve', 'details']:
+            return ProjectDetailSerializer
+        return ProjectCreateUpdateSerializer
+
     def get_queryset(self):
         user = self.request.user
-        # Si está autenticado y es jefe de proyecto, filtrar por owner
-        if user.is_authenticated and user.role == 'user':
+        if not user.is_authenticated:
+            return Project.objects.select_related('owner').all()
+        if user.role == 'admin':
+            return Project.objects.select_related('owner').all()
+        if user.role == 'user':
             return Project.objects.select_related('owner').filter(owner=user)
-        # Admin o no autenticado ve todos
-        return Project.objects.select_related('owner').all()
-        
-    def get_queryset(self):
-        return Project.objects.select_related('owner').all()
+        return Project.objects.none()
 
     @action(detail=True, methods=['get'])
     def details(self, request, pk=None):

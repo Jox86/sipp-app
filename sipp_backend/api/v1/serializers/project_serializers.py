@@ -8,9 +8,13 @@ class BudgetHistorySerializer(serializers.ModelSerializer):
         fields = ['id', 'budget', 'period', 'periodEnd', 'syncedAt']
 
 
+from rest_framework import serializers
+from apps.projects.models import Project, BudgetHistory
+
+
 class ProjectListSerializer(serializers.ModelSerializer):
-    owner_name = serializers.CharField(source='owner.fullName', read_only=True)
-    owner_email = serializers.CharField(source='owner.email', read_only=True)
+    owner_name = serializers.SerializerMethodField()
+    owner_email = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -20,6 +24,12 @@ class ProjectListSerializer(serializers.ModelSerializer):
             'budgetPeriod', 'owner', 'owner_name', 'owner_email',
             'created_at', 'updated_at'
         ]
+
+    def get_owner_name(self, obj):
+        return obj.owner.fullName if obj.owner else 'Sin asignar'
+
+    def get_owner_email(self, obj):
+        return obj.owner.email if obj.owner else ''
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):

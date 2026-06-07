@@ -60,3 +60,27 @@ class User(AbstractUser):
         if not self.username:
             self.username = self.email
         super().save(*args, **kwargs)
+
+# Agregar al final del archivo existente
+class Area(models.Model):
+    AREA_TYPE_CHOICES = [
+        ('facultad', 'Facultad'),
+        ('centro_investigacion', 'Centro de Investigación'),
+        ('departamento', 'Departamento'),
+        ('direccion', 'Dirección'),
+        ('unidad', 'Unidad'),
+        ('otro', 'Otro'),
+    ]
+    
+    name = models.CharField(max_length=255)
+    area_type = models.CharField(max_length=30, choices=AREA_TYPE_CHOICES)
+    
+    class Meta:
+        verbose_name = 'Área'
+        verbose_name_plural = 'Áreas'
+        ordering = ['area_type', 'name']
+        unique_together = ['name', 'area_type']
+    
+    def __str__(self):
+        return f'{self.get_area_type_display()} - {self.name}'
+
