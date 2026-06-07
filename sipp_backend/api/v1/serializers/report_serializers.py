@@ -2,7 +2,6 @@ from rest_framework import serializers
 from apps.reports_app.models import Report, ActaConformidad
 from apps.orders.models import Order
 
-
 class OrderReportSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.fullName', read_only=True)
     project_name = serializers.SerializerMethodField()
@@ -11,15 +10,14 @@ class OrderReportSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'user', 'user_name', 'project', 'project_name',
-            'order_type', 'status', 'items', 'total', 'notes',
+            'order_type', 'status', 'items', 'total',
             'completed_at', 'created_at', 'updated_at'
         ]
 
     def get_project_name(self, obj):
         if obj.project:
-            return f'{obj.project.costCenter} - {obj.project.projectNumber}: {obj.project.name}'
+            return f'{obj.project.costCenter} - {obj.project.projectNumber}'
         return 'Pedido Extra'
-
 
 class ReportSerializer(serializers.ModelSerializer):
     generated_by_name = serializers.CharField(source='generated_by.fullName', read_only=True)
@@ -30,8 +28,6 @@ class ReportSerializer(serializers.ModelSerializer):
 
 
 class ActaConformidadSerializer(serializers.ModelSerializer):
-    generated_by_name = serializers.CharField(source='generated_by.fullName', read_only=True)
-
     class Meta:
         model = ActaConformidad
         fields = '__all__'

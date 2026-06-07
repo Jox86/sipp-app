@@ -32,4 +32,4 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'Pedido #{self.id} - {self.user.fullName if self.user else "N/A"}'
+        return f'Pedido #{self.id}'

@@ -4,24 +4,25 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum
+from django.utils import timezone
 from apps.orders.models import Order
 from apps.reports_app.models import Report, ActaConformidad
 from api.v1.serializers.report_serializers import (
     OrderReportSerializer, ReportSerializer, ActaConformidadSerializer
 )
+import datetime
 
-
-class OrderReportViewSet(viewsets.ReadOnlyModelViewSet):
+class OrderReportViewSet(viewsets.ModelViewSet):
     serializer_class = OrderReportSerializer
-    permission_classes = [AllowAny]  # Cambiar a AllowAny
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'order_type']
+    search_fields = ['user__fullName', 'user__email']
+    ordering_fields = ['total', 'created_at']
+    ordering = ['-created_at']
 
     def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return Order.objects.select_related('user', 'project').all()
-        if user.role == 'admin':
-            return Order.objects.select_related('user', 'project').all()
-        return Order.objects.select_related('user', 'project').filter(user=user)
+        return Order.objects.select_related('user', 'project').all()
 
     @action(detail=True, methods=['patch'])
     def mark_completed(self, request, pk=None):
@@ -34,14 +35,13 @@ class OrderReportViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def stats(self, request):
         orders = self.get_queryset()
-        total = orders.count()
-        completed = orders.filter(status='Completado').count()
-        pending = orders.filter(status__in=['Pendiente', 'En proceso']).count()
-        total_amount = orders.aggregate(Sum('total'))['total__sum'] or 0
         return Response({
-            'total': total, 'completed': completed, 'pending': pending,
-            'total_amount': float(total_amount)
+            'total': orders.count(),
+            'completed': orders.filter(status='Completado').count(),
+            'pending': orders.filter(status__in=['Pendiente', 'En proceso']).count(),
+            'total_amount': float(orders.aggregate(Sum('total'))['total__sum'] or 0),
         })
+
 
     @action(detail=False, methods=['get'])
     def export(self, request):
@@ -66,14 +66,9 @@ class ActaConformidadViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.role == 'admin':
-            return ActaConformidad.objects.all()
-        return ActaConformidad.objects.filter(generated_by=user)
+        return ActaConformidad.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(generated_by=self.request.user)
+        serializer.save()
 
 
-import datetime
-from django.utils import timezone
