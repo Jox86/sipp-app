@@ -12,7 +12,13 @@ class Report(models.Model):
 
     title = models.CharField(max_length=255)
     report_type = models.CharField(max_length=20, choices=REPORT_TYPE_CHOICES, default='general')
-    generated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports', null=True, blank=True)
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='reports',
+        null=True,  
+        blank=True 
+    )
     filters_applied = models.JSONField(default=dict, blank=True)
     orders_count = models.IntegerField(default=0)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)

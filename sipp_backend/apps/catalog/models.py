@@ -5,8 +5,11 @@ from django.conf import settings
 class Empresa(models.Model):
     nombre = models.CharField(max_length=255)
     encargado = models.CharField(max_length=255, blank=True, null=True)
+    tipo_negocio = models.CharField(max_length=100, blank=True, null=True)  # NUEVO
     website = models.URLField(blank=True, null=True)
+    moneda = models.CharField(max_length=10, default='CUP')  # NUEVO
     activo = models.BooleanField(default=True)
+    contactos = models.JSONField(default=list, blank=True)  # NUEVO
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -16,7 +19,6 @@ class Empresa(models.Model):
 
     def __str__(self):
         return self.nombre
-
 
 class Producto(models.Model):
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos')

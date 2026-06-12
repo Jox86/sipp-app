@@ -25,7 +25,9 @@ class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = '__all__'
-
+        extra_kwargs = {
+            'generated_by': {'required': False, 'allow_null': True}
+        }
 
 class ActaConformidadSerializer(serializers.ModelSerializer):
     class Meta:
