@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'apps.reports_app',
     'apps.catalog',
     'apps.messages_app',
+    'apps.conectividad',
 ]
 
 MIDDLEWARE = [
